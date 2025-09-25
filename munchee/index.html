@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snickers Interactive Animation</title>
+    <link rel="stylesheet" type="text/css" href="assets/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="text/javascript" src="assets/js/pb_scale.js"></script>
+</head>
+<body style="margin: 0; padding: 0">
+    
+    <!-- Small Ad Circle -->
+    <div id="small-ad" class="container-">
+        <div id="small-ad-background"></div>
+        <div id="small-ad-foreground"></div>
+        <div id="small-ad-can-one"></div>
+        <div id="small-ad-can-two"></div>
+        <div id="drag-element"></div>
+        <div id="close-button"></div>
+        <div id="instruction-background">
+            <div id="instruction-foreground"></div>
+        </div>
+    </div>
+
+    <!-- Large Floating Overlay -->
+    <div id="floating-overlay">
+        <div id="floating-wrapper">
+            <!-- Background circles -->
+            <div id="large-circle-1-foreground"></div>
+            <div id="large-circle-1-background"></div>
+            <div id="large-circle-2-foreground"></div>
+            <div id="large-circle-2-background"></div>
+            
+            <!-- Product elements -->
+            <div id="product-image"></div>
+            
+            <!-- Can elements -->
+            <div id="floating-can-one"></div>
+            <div id="floating-can-two"></div>
+            <div id="floating-can-three"></div>
+            
+            <!-- Gift box -->
+            <div id="gift-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables
+        var _document = document;
+        var _window = window;
+        var clcnt = 0;
+
+        // Elements object
+        var o = {};
+
+        // Initialize elements
+        function setObjects() {
+            var divs = document.getElementsByTagName("div");
+            for (var i = 0; i < divs.length; i++) {
+                var d = divs[i];
+                var id = d.id;
+                if (id) {
+                    // Map meaningful names to short names for compatibility
+                    switch(id) {
+                        case 'small-ad': o.ad = d; break;
+                        case 'small-ad-background': o.bb_b = d; break;
+                        case 'small-ad-foreground': o.bb_f = d; break;
+                        case 'small-ad-can-one': o.can_one = d; break;
+                        case 'small-ad-can-two': o.can_two = d; break;
+                        case 'drag-element': o.dragEl = d; break;
+                        case 'close-button': o.closeBtn = d; break;
+                        case 'instruction-background': o.inst_bg = d; break;
+                        case 'instruction-foreground': o.inst_fg = d; break;
+                        case 'floating-overlay': o.float = d; break;
+                        case 'floating-wrapper': o.fl_wrap = d; break;
+                        case 'large-circle-1-foreground': o.fl_b1_f = d; break;
+                        case 'large-circle-1-background': o.fl_b1_b = d; break;
+                        case 'large-circle-2-foreground': o.fl_b2_f = d; break;
+                        case 'large-circle-2-background': o.fl_b2_b = d; break;
+                        case 'product-image': o.fl_cp = d; break;
+                        case 'floating-can-one': o.fl_can_one = d; break;
+                        case 'floating-can-two': o.fl_can_two = d; break;
+                        case 'floating-can-three': o.fl_can_three = d; break;
+                        case 'gift-box': o.fl_gift = d; break;
+                    }
+                }
+            }
+        }
+
+        // Local variables
+        var ddef = {
+            adEnd: false,
+            drag: {
+                x: 0,
+                y: 0,
+                lx: 0,
+                ly: 0,
+                dx: 0,
+                dy: 0,
+            },
+            screen: {
+                w: 0,
+                h: 0,
+                x: 0,
+                y: 0,
+            },
+            w: 150,
+            h: 150,
+            fw: 1200,
+            fh: 960,
+            canvas: null,
+            ctx: null,
+        };
+
+        // Animation states
+        var started = false;
+        var finished = false;
+        var isStarted = true;
+        var isFinished = true;
+
+        // Scaler instance
+        var scaler = new scScale();
+
+        // Animation timelines
+        var fllp = gsap.timeline({ repeat: -1 });
+        var flsl = gsap.timeline({
+            paused: true,
+            onComplete: () => {
+                flcta.restart();
+                fleq.restart();
+            },
+        });
+        var flcta = gsap.timeline({ paused: true });
+        var fleq = gsap.timeline({ paused: true });
+
+        // Event tracking
+        var _dsptr = function (e) {
+            console.log("Event:", e);
+        };
+
+        function startedFunction() {
+            if (isStarted) {
+                isStarted = false;
+                startEvent("Main");
+            }
+        }
+
+        function finishedFunction() {
+            if (isFinished) {
+                isFinished = false;
+                startEvent("Seen_All");
+            }
+        }
+
+        function startEvent(event_name) {
+            _dsptr(event_name);
+        }
+
+        function ctaFunction(e) {
+            // URL navigation removed - no action on click
+            console.log("Click event:", e.target.id);
+        }
+
+        // Initialize floating overlay
+        function initFloat() {
+            startedFunction();
+            onScale();
+
+            _window.addEventListener("resize", (event) => {
+                onScale();
+            });
+
+            // Continuous flip animation for product image
+            gsap.to(o.fl_cp, {
+                rotateY: 360,
+                duration: 2.0,
+                ease: "power2.inOut",
+                repeat: -1,
+                yoyo: false
+            });
+
+            // Continuous swing animation for gift box
+            gsap.to(o.fl_gift, {
+                rotate: 5,
+                duration: 1.5,
+                ease: "power2.inOut",
+                repeat: -1,
+                yoyo: true
+            });
+
+            // Enlarge and shrink animation for floating cans - start after a delay
+            gsap.delayedCall(3, function() {
+                gsap.to([o.fl_can_one, o.fl_can_two], {
+                    scale: 2.0,
+                    duration: 3.0,
+                    ease: "power1.inOut",
+                    repeat: -1,
+                    yoyo: true
+                });
+            });
+
+            flsl.restart();
+
+            gsap.fromTo(
+                [o.fl_b1_f, o.fl_b1_b, o.fl_b2_f, o.fl_b2_b, o.fl_cp],
+                { scale: 0.2, opacity: 0 },
+                {
+                    opacity: 1,
+                    scale: 1,
+                    duration: 0.5,
+                    ease: "back.out(2)",
+                    stagger: 0.05,
+                }
+            );
+
+            // First enlarge the circles, then resize back to original loading size
+            flsl
+                .to(
+                    [o.fl_b1_f, o.fl_b2_f],
+                    {
+                        scale: 1.3,
+                        duration: 0.3,
+                        ease: "power2.out",
+                    },
+                    "an+=0.8"
+                )
+                .to(
+                    [o.fl_b1_f, o.fl_b2_f],
+                    {
+                        scale: 0.8,
+                        duration: 0.3,
+                        ease: "back.out(1)",
+                    },
+                    "an+=1.1"
+                )
+                .to(
+                    [o.fl_b1_b, o.fl_b2_b],
+                    {
+                        scale: 0.6,
+                        duration: 0.5,
+                        x: 80,
+                        y: 184,
+                        ease: "back.in(1)",
+                        rotate: 20,
+                    },
+                    "an+=1.2"
+                )
+                .to(
+                    o.fl_b1_f,
+                    {
+                        rotate: 20,
+                        duration: 0.5,
+                        ease: "back.in(1)",
+                    },
+                    "an+=1.2"
+                )
+                .to(
+                    o.fl_b2_f,
+                    {
+                        rotate: 19,
+                        duration: 0.5,
+                        ease: "back.in(1)",
+                    },
+                    "an+=1.2"
+                )
+                .to(o.fl_b2_f, {
+                    scale: 0.9,
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                }, "an+=1.2");
+
+            flsl.to(
+                o.fl_cp,
+                {
+                    scale: 0.6,
+                    duration: 0.5,
+                    x: 50,
+                    y: 150,
+                    ease: "back.in(1)",
+                    rotate: 5,
+                },
+                "an+=1.2"
+            );
+
+            flsl.fromTo(
+                [o.fl_can_one, o.fl_can_two],
+                { opacity: 0, scale: 0 },
+                { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1)" },
+                "an+=0.3"
+            );
+
+            flsl.to(
+                [o.fl_can_one, o.fl_can_two, o.fl_can_three],
+                {
+                    opacity: 1,
+                    rotate: 0,
+                    scale: 0.8,
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                    stagger: 0.05,
+                },
+                "an+=0.7"
+            );
+
+            flsl.to(
+                o.fl_can_one,
+                { y: -20, duration: 0.5, ease: "back.in(1)" },
+                "an+=0.7"
+            );
+            flsl.to(
+                o.fl_can_two,
+                { y: 20, duration: 0.5, ease: "back.in(1)" },
+                "an+=0.7"
+            );
+
+            flsl.to(
+                [o.fl_can_one, o.fl_can_two, o.fl_can_three],
+                {
+                    opacity: 0,
+                    rotate: 0,
+                    scale: 0.5,
+                    y: 0,
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                    stagger: 0.05,
+                },
+                "an+=4.2"
+            );
+
+            flsl.fromTo(
+                o.fl_gift,
+                { scale: 0, opacity: 0 },
+                {
+                    scale: 1,
+                    opacity: 1,
+                    duration: 0.5,
+                    ease: "back.out(1.3)",
+                    rotate: 5,
+                },
+                "an+=4.6"
+            );
+
+            gsap.fromTo(
+                o.float,
+                { autoAlpha: 0 },
+                { autoAlpha: 1, display: "block", ease: "back.out(1)", duration: 0.5 }
+            );
+
+            gsap.to(o.ad, {
+                scale: 0.1,
+                autoAlpha: 0,
+                duration: 0.5,
+                ease: "back.in(2)",
+            });
+
+            startEvent("openBigFloat");
+        }
+
+        function closeFloat(e) {
+            e.stopPropagation();
+            gsap.to(o.float, {
+                autoAlpha: 0,
+                display: "none",
+                duration: 0.5,
+                delay: 0.2,
+            });
+
+            gsap.to(o.ad, {
+                scale: 1,
+                autoAlpha: 1,
+                duration: 0.5,
+                ease: "back.out(2)",
+            });
+
+            startEvent("closeBigFloat");
+            fllp.pause();
+        }
+
+        // Initialize ad animations
+        function initAd() {
+            var anlp = gsap.timeline({ repeat: -1 });
+
+            anlp.to(
+                o.can_one,
+                { rotate: 180, opacity: 0, duration: 0.5, ease: "back.out(1)" },
+                "an+=2"
+            );
+            anlp.fromTo(
+                o.can_two,
+                { rotate: -180, opacity: 0 },
+                { rotate: 0, opacity: 1, duration: 0.5, ease: "back.out(1)" },
+                "an+=2"
+            );
+            anlp.to(
+                o.bb_f,
+                {
+                    background: "linear-gradient(to bottom, #19a4de 50%, #45180e 50%)",
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                },
+                "an+=2"
+            );
+            anlp.to(
+                o.bb_b,
+                {
+                    backgroundColor: "#e6e6e6",
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                },
+                "an+=2"
+            );
+
+            anlp.set(o.can_one, { rotate: -180 }, "an+=5");
+            anlp.to(
+                o.can_two,
+                { rotate: 180, opacity: 0, duration: 0.5, ease: "back.out(1)" },
+                "an+=5"
+            );
+            anlp.to(
+                o.can_one,
+                { rotate: 0, opacity: 1, duration: 0.5, ease: "back.out(1)" },
+                "an+=5"
+            );
+            anlp.to(
+                o.bb_f,
+                {
+                    background: "linear-gradient(to bottom, #19a4de 50%, #45180e 50%)",
+                    duration: 0.5,
+                    ease: "back.out(1)",
+                },
+                "an+=5"
+            );
+            anlp.to(
+                o.bb_b,
+                { backgroundColor: "#d8d9d9", duration: 0.5, ease: "back.out(1)" },
+                "an+=5"
+            );
+
+            var inst_lp = gsap.timeline({ repeat: -1, yoyo: true });
+
+            inst_lp.to(o.inst_fg, {
+                scale: 0.9,
+                duration: 0.2,
+                rotate: 10,
+                ease: "power1.inOut",
+                delay: 0.1,
+            });
+
+            gsap.set([o.float], { autoAlpha: 0 });
+
+            o.float.addEventListener("click", ctaFunction);
+            o.ad.addEventListener("click", initFloat);
+        }
+
+        // Scaling function
+        function onScale() {
+            scaler.scale(_window, o.float, ddef.fw, ddef.fh);
+        }
+
+        // Drag functionality
+        function initDrag() {
+            var dragAmm = 0;
+            var dex = 0;
+            var dey = 0;
+            var cx = 0;
+            var cy = 0;
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            dragElement(o.dragEl);
+
+            function dragElement(elmnt) {
+                elmnt.onmousedown = dMouseDown;
+                elmnt.ontouchstart = dTouchDown;
+
+                function dMouseDown(e) {
+                    e = e || _window.event;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    dragMouseDown(e);
+                }
+
+                function dTouchDown(e) {
+                    e = e || _window.event;
+                    pos3 = e.touches[0].clientX;
+                    pos4 = e.touches[0].clientY;
+                    dragMouseDown(e);
+                }
+
+                function dragMouseDown(e) {
+                    dragAmm = 0;
+                    _document.onmouseup = closeDragElement;
+                    _document.ontouchend = closeDragElement;
+                    _document.onmousemove = mouseDrag;
+                    _document.ontouchmove = touchDrag;
+                }
+
+                function mouseDrag(e) {
+                    e = e || _window.event;
+                    elementDrag(e, true);
+                }
+
+                function touchDrag(e) {
+                    e.stopImmediatePropagation();
+                    elementDrag(e, false);
+                }
+
+                var sPos = { x: 0, y: 0 };
+                var cPos = { x: 0, y: 0 };
+
+                function elementDrag(e, isMouse) {
+                    startedFunction();
+                    dragAmm++;
+                    var clientX = isMouse ? e.clientX : e.touches[0].clientX;
+                    var clientY = isMouse ? e.clientY : e.touches[0].clientY;
+
+                    pos1 = pos3 - clientX;
+                    pos2 = pos4 - clientY;
+                    pos3 = clientX;
+                    pos4 = clientY;
+
+                    cPos.x += sPos.x - pos1;
+                    cPos.y += sPos.y - pos2;
+
+                    var x = cPos.x;
+                    var y = cPos.y;
+
+                    ddef.drag.x = x;
+                    ddef.drag.y = y;
+
+                    o.ad.style.right = 25 - x + "px";
+                    o.ad.style.bottom = 25 - y + "px";
+                }
+
+                function closeDragElement(e) {
+                    if (dragAmm <= 2 && click == 0) {
+                        ctaFunction(e);
+                        click = 1;
+                        setTimeout(function () {
+                            click = 0;
+                        }, 100);
+                    }
+
+                    _document.onmouseup = null;
+                    _document.onmousemove = null;
+                    _document.ontouchend = null;
+                    _document.ontouchmove = null;
+                }
+
+                var click = 0;
+            }
+        }
+
+        // Initialize everything
+        function init() {
+            setObjects();
+            initDrag();
+            initAd();
+        }
+
+        // Start when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

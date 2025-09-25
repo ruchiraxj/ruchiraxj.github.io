@@ -1,0 +1,266 @@
+html,
+body {
+  /* overscroll-behavior-y: contain; */
+  /* overflow: hidden;
+    padding: 0;
+    margin: 0; */
+}
+
+/* =============================================================== */
+
+#small-ad-background,
+#small-ad-foreground,
+#small-ad-can-one,
+#small-ad-can-two {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  top: 0;
+  left: 0;
+}
+
+#small-ad-can-one {
+  background-image: url(../images/Asset-4.png);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#small-ad-can-two {
+  background-image: url(../images/Asset-6.png);
+  background-size: 80%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#small-ad-foreground {
+  border-radius: 50%;
+  /* background-color: #2a2d2e; */
+  width: 140px;
+  height: 140px;
+  top: 5px;
+  left: 5px;
+  background: linear-gradient(to bottom, #19a4de 50%, #45180e 50%);
+}
+
+#small-ad-background {
+  width: 170px;
+  height: 170px;
+  top: -10px;
+  left: -15px;
+
+  background-color: #d8d9d9;
+  border-radius: 50%;
+}
+
+#instruction-background {
+  position: absolute;
+  width: 37px;
+  height: 37px;
+  bottom: -40px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+
+}
+
+#instruction-foreground {
+  position: absolute;
+  width: 37px;
+  height: 37px;
+  top: 0;
+  left: 0;
+
+}
+
+/* =============================================================== */
+
+#product-image {
+  position: absolute;
+  width: 387px;
+  height: 273px;
+  top: 360px;
+  left: 750px;
+  background-image: url(../images/Asset-5.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+
+#floating-can-one,
+#floating-can-two,
+#floating-can-three {
+  position: absolute;
+  width: 500px;
+  height: 200px;
+  top: 370px;
+  left: 220px;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+#floating-can-one {
+  top: 240px;
+  background-image: url(../images/Asset-4.png);
+}
+
+#floating-can-two {
+  top: 550px;
+  background-image: url(../images/Asset-6.png);
+}
+
+
+#gift-box {
+  position: absolute;
+  width: 500px;
+  height: 650px;
+  top: 130px;
+  left: 230px;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url(../images/Asset-4.png);
+}
+
+#large-circle-1-foreground {
+  position: absolute;
+  width: 805px;
+  height: 805px;
+  left: 77px;
+  top: 77px;
+  /* background: radial-gradient(#67ccf6, #11698d); */
+  background: linear-gradient(to bottom, #19a4de 50%, #45180e 50%);
+  border-radius: 50%;
+
+  overflow: hidden;
+}
+
+#large-circle-1-background {
+  position: absolute;
+  width: 547px;
+  height: 547px;
+  /* top: 325px; */
+  top: 206px;
+  left: 632px;
+  /* background-color: #1e82aa; */
+  background: linear-gradient(to bottom, #19a4de 50%, #44180e 50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+#large-circle-2-foreground {
+  position: absolute;
+  width: 896px;
+  height: 896px;
+  left: 9px;
+  top: 28px;
+  background: linear-gradient(to bottom, #19a4de 50%, #45180e 50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+#large-circle-2-background {
+  position: absolute;
+  width: 593px;
+  height: 593px;
+  left: 608px;
+  /* top: 295px; */
+  top: 180px;
+  background: linear-gradient(to bottom, #19a4de 50%, #45180e 50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+
+/* =============================================================== */
+
+#floating-overlay {
+  position: absolute;
+  width: 1200px;
+  height: 960px;
+  top: 0;
+  left: 0;
+
+  z-index: 999999;
+
+  cursor: pointer;
+
+  display: none;
+
+  overflow: hidden;
+}
+
+#floating-wrapper {
+  position: absolute;
+  width: 1206px;
+  height: 960px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: -50px;
+  right: 0;
+  /* margin: 0 auto; */
+  margin-left: auto;
+  margin-right: auto;
+  pointer-events: none;
+  /* transform: scale(0.8); */
+}
+
+
+/* =============================================================== */
+
+#drag-element {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  top: 0;
+  left: 0;
+  background-image: url(../images/empty.png);
+}
+
+#close-button {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  top: -5px;
+  right: -5px;
+  background-image: url(../images/closeBtn.png);
+  cursor: pointer;
+  z-index: 9999;
+}
+
+#small-ad {
+  width: 150px;
+  height: 150px;
+  position: fixed;
+  /*margin: 0 auto 40px;*/
+  border: 0px solid #ccc;
+  -webkit-perspective: 1000px;
+  -moz-perspective: 1000px;
+  -o-perspective: 1000px;
+  perspective: 1000px;
+  z-index: 999999;
+  cursor: grab;
+
+  right: 30px;
+  bottom: 45px;
+  text-overflow: clip;
+  border-radius: 5px;
+}
+
+.rct {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+}
+
+.noDisplay {
+  display: none;
+}
+
+.noEvents {
+  pointer-events: none;
+}
